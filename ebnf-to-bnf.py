@@ -93,24 +93,31 @@ def detectar_divisor_production(line):
 def remove_duplicates(lista):
     return list(dict.fromkeys(lista))
 
-def criar_auxiliares_por_grupos_obtidos(linha, con, nonterm, tup_blocos, divisor_production):
+def criar_auxiliares_por_grupos_obtidos(linha, con, nonterm, tup_blocos, divisor_production, dic_grupo_nonTerm_aux):
     novas_linhas = []
     paren = eliminar_grupos_bordas_strings(linha, tup_blocos)
     paren = remove_duplicates(paren)
     if len(paren) > 0:
         for idx, grupo in enumerate(paren):
-            nonTerm_aux = nonterm + '_AUX_' + str(con) + '_' + str(idx)
+
+            if grupo in dic_grupo_nonTerm_aux:
+                nonTerm_aux = dic_grupo_nonTerm_aux[grupo]
+            else:
+                nonTerm_aux = nonterm + '_AUX_' + str(con) + '_' + str(idx)
+                dic_grupo_nonTerm_aux[grupo] = nonTerm_aux
+
             linha = linha.replace(grupo, nonTerm_aux)
 
             div = divisor_production if divisor_production != None else '::='
             new_non_term = nonTerm_aux + ' ' + div + ' ' + grupo
             novas_linhas.append(new_non_term)
-    return (linha, novas_linhas)
+    return (linha, novas_linhas, dic_grupo_nonTerm_aux)
 
 def detectar_grupos_criar_non_terms(linhas_arq):
     divisor_production = ''
     nonterm_ant = ''
     novas_linhas = []
+    dic_grupo_nonTerm_aux = {}
     for con, l in enumerate(arq):
         linha = l.strip()
         # \/ eliminar caracteres opcionais, ou de repetição;
@@ -124,15 +131,17 @@ def detectar_grupos_criar_non_terms(linhas_arq):
             divisor_production = detectar_divisor_production(linha)
             nonterm_ant = nonterm
 
-            tup_linha_novas_linhas = criar_auxiliares_por_grupos_obtidos(linha, con, nonterm, tup_blocos1, divisor_production)
+            tup_linha_novas_linhas = criar_auxiliares_por_grupos_obtidos(linha, con, nonterm, tup_blocos1, divisor_production, dic_grupo_nonTerm_aux)
             novas_linhas += tup_linha_novas_linhas[1]
             novas_linhas += tup_linha_novas_linhas[1]
+            dic_grupo_nonTerm_aux.update(tup_linha_novas_linhas[2])
             linha = tup_linha_novas_linhas[0]
         elif linha[0] == '|':
 
-            tup_linha_novas_linhas = criar_auxiliares_por_grupos_obtidos(linha, con, nonterm_ant, tup_blocos1, divisor_production)
+            tup_linha_novas_linhas = criar_auxiliares_por_grupos_obtidos(linha, con, nonterm_ant, tup_blocos1, divisor_production, dic_grupo_nonTerm_aux)
             novas_linhas += tup_linha_novas_linhas[1]
             novas_linhas += tup_linha_novas_linhas[1]
+            dic_grupo_nonTerm_aux.update(tup_linha_novas_linhas[2])
             linha = tup_linha_novas_linhas[0]
 
         novas_linhas = remove_duplicates(novas_linhas)
