@@ -11,19 +11,9 @@ def get_nonTerm(txt):
         return txt[0:x.start()].strip()
     return None
 
-# \/ detectar: '( ... )'
-def detectar_paren(txt):
-    lp = []
-    reg = r"([\(\[]+)[^\"\']([^\(\)\[\]]+)[^\"\']([\)\]]+)"
-    x = re.findall(reg, txt)
-    for r in x:
-        conteudo = ' '.join(list(r))
-        lp.append(conteudo)
-    return lp
-
 # \/ obter lista de substrings que compõem caracteres de blocos;
-def pegar_grupos(txt):
-    bloco = ('(', ')')
+def pegar_grupos(txt, tup_blocos):
+    bloco = tup_blocos
     listg = []
     # \/ bloco final;
     fech = txt.rfind(bloco[1])
@@ -66,8 +56,8 @@ def pegar_grupos_string(txt):
 estiver no mesmo local que um bloco de string encontrado (ex: "(");
 elimina grupos obtidos com bordas que pertencam a grupos strings;
 """
-def eliminar_grupos_bordas_strings(txt):
-    grupos_blocos = pegar_grupos(txt)
+def eliminar_grupos_bordas_strings(txt, tup_blocos):
+    grupos_blocos = pegar_grupos(txt, tup_blocos)
     grupos_str = pegar_grupos_string(txt)
     for i in grupos_str:
         ind = txt.find(i)+1
@@ -76,15 +66,6 @@ def eliminar_grupos_bordas_strings(txt):
             if ind == indb:
                 grupos_blocos.pop(idx)
     return grupos_blocos
-
-# \/ inserir espaço em branco entre aspas e remover espaços duplicados;
-def inserir_espaco_aspas(txt):
-    txt = txt.replace("'", " ' ").replace('"', ' " ')
-    txt = re.sub('[ \t]+', ' ', txt)
-    return txt
-
-def remover_espacos_multi(txt):
-    return re.sub('[ \t]+', ' ', txt)
 
 def retirar_ultimos_blocos(line):
     bloco = ('(', ')')
@@ -112,6 +93,19 @@ def detectar_divisor_production(line):
 def remove_duplicates(lista):
     return list(dict.fromkeys(lista))
 
+def criar_auxiliares_por_grupos_obtidos(linha, con, nonterm, tup_blocos):
+    novas_linhas = []
+    paren = eliminar_grupos_bordas_strings(linha, tup_blocos)
+    paren = remove_duplicates(paren)
+    if len(paren) > 0:
+        for idx, grupo in enumerate(paren):
+            nonTerm_aux = nonterm + '_AUX_' + str(con) + '_' + str(idx)
+            linha = linha.replace(grupo, nonTerm_aux)
+
+            new_non_term = nonTerm_aux + ' ::= ' + grupo
+            novas_linhas.append(new_non_term)
+    return novas_linhas
+
 def detectar_grupos_criar_non_terms(linhas_arq):
     divisor_production = ''
     nonterm_ant = ''
@@ -122,27 +116,20 @@ def detectar_grupos_criar_non_terms(linhas_arq):
         linha  = re.sub('[\?\+\*]+', ' ', linha)
         nonterm = get_nonTerm(linha)
 
+        tup_blocos1 = ('(', ')')
+        tup_blocos2 = ('[', ']')
+
         if nonterm != None:
             divisor_production = detectar_divisor_production(linha)
             nonterm_ant = nonterm
-            paren = eliminar_grupos_bordas_strings(linha)
-            paren = remove_duplicates(paren)
-            for idx, grupo in enumerate(paren):
-                nonTerm_aux = nonterm + '_AUX_' + str(con) + '_' + str(idx)
-                linha = linha.replace(grupo, nonTerm_aux)
 
-                new_non_term = nonTerm_aux + ' ::= ' + grupo
-                novas_linhas.append(new_non_term)
-        elif linha[0] == '|':
-            paren = eliminar_grupos_bordas_strings(linha)
-            paren = remove_duplicates(paren)
-            for idx, grupo in enumerate(paren):
-                nonTerm_aux = nonterm_ant + '_AUX_' + str(con) + '_' + str(idx)
-                linha = linha.replace(grupo, nonTerm_aux)
+            novas_linhas += criar_auxiliares_por_grupos_obtidos(linha, con, nonterm, tup_blocos1)
+            novas_linhas += criar_auxiliares_por_grupos_obtidos(linha, con, nonterm, tup_blocos2)
+        elif linha[0] == '|' and nonterm != None:
 
-                new_non_term = nonTerm_aux + ' ' + divisor_production + ' ' + grupo
-                novas_linhas.append(new_non_term)
-        # print(linha)
+            novas_linhas += criar_auxiliares_por_grupos_obtidos(linha, con, nonterm, tup_blocos1)
+            novas_linhas += criar_auxiliares_por_grupos_obtidos(linha, con, nonterm, tup_blocos2)
+
         arq[con] = linha
     return novas_linhas
 
