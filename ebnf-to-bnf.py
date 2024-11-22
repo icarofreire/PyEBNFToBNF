@@ -99,18 +99,19 @@ def criar_auxiliares_por_grupos_obtidos(linha, con, nonterm, tup_blocos, divisor
     paren = remove_duplicates(paren)
     if len(paren) > 0:
         for idx, grupo in enumerate(paren):
+            grupo = grupo.strip()
+            if grupo != "":
+                if grupo in dic_grupo_nonTerm_aux:
+                    nonTerm_aux = dic_grupo_nonTerm_aux[grupo]
+                else:
+                    nonTerm_aux = nonterm + '_AUX_' + str(con) + '_' + str(idx)
+                    dic_grupo_nonTerm_aux[grupo] = nonTerm_aux
 
-            if grupo in dic_grupo_nonTerm_aux:
-                nonTerm_aux = dic_grupo_nonTerm_aux[grupo]
-            else:
-                nonTerm_aux = nonterm + '_AUX_' + str(con) + '_' + str(idx)
-                dic_grupo_nonTerm_aux[grupo] = nonTerm_aux
+                linha = linha.replace(grupo, nonTerm_aux)
 
-            linha = linha.replace(grupo, nonTerm_aux)
-
-            div = divisor_production if divisor_production != None else '::='
-            new_non_term = nonTerm_aux + ' ' + div + ' ' + grupo
-            novas_linhas.append(new_non_term)
+                div = divisor_production if divisor_production != None else '::='
+                new_non_term = nonTerm_aux + ' ' + div + ' ' + grupo
+                novas_linhas.append(new_non_term)
     return (linha, novas_linhas, dic_grupo_nonTerm_aux)
 
 def detectar_grupos_criar_non_terms(linhas_arq):
@@ -172,29 +173,22 @@ def apply(linhas_arq, nome_arq_bnf):
     linhas_arq = add_novas_linhas(linhas_arq)
     criar_arq_bnf(linhas_arq, nome_arq_bnf)
 
+def apply_in_file(arquivo):
+    f = open(arquivo, "r")
 
-arq = [
-'IfStatement	::=	"if" "(" Expression ")" Statement ( "else" Statement )?',
-'IterationStatement	::=	( "do" Statement "while" "(" Expression ")" ( ";" )? )',
-'|	( "while" "(" Expression ")" Statement )',
-'|	( "for" "(" ( ExpressionNoIn )? ";" ( Expression )? ";" ( Expression )? ")" Statement )',
-'|	( "for" "(" "var" VariableDeclarationList ";" ( Expression )? ";" ( Expression )? ")" Statement )',
-'|	( "for" "(" "var" VariableDeclarationNoIn "in" Expression ")" Statement )',
-'|	( "for" "(" LeftHandSideExpressionForIn "in" Expression ")" Statement )',
-'ContinueStatement	::=	"continue" ( Identifier )? ( ";" )?',
-'BreakStatement	::=	"break" ( Identifier )? ( ";" )?',
-'ReturnStatement	::=	"return" ( Expression )? ( ";" )?',
-'WithStatement	::=	"with" "(" Expression ")" Statement',
-'SwitchStatement	::=	"switch" "(" Expression ")" CaseBlock',
-'CaseBlock	::=	"{" ( CaseClauses )? ( "}" | DefaultClause ( CaseClauses )? "}" )',
-'CaseClauses	::=	( CaseClause )+',
-'CaseClause	::=	( ( "case" Expression ":" ) ) ( StatementList )?',
-'DefaultClause	::=	( ( "default" ":" ) ) ( StatementList )?',
-]
+    nome_bnf = ''
+    idx_ex = f.name.find('.')
+    if idx_ex != -1:
+        nome_bnf = f.name[0:idx_ex] + '-bnf.txt'
+    else:
+        nome_bnf = f.name + '-bnf.txt'
+    
+    lines = f.readlines()
+    apply(lines, nome_bnf)
 
-apply(arq, "teste-bnf.txt")
-# line = 'IfStatement_AUX_0_1 ::= ( " else " Statement )'
-# line = inserir_espaco_aspas(line)
-# print(line)
-# # print( detectar_divisor_production(line) )
-# print( retirar_aspas_ultimas(line) )
+    # Close opened file
+    f.close()
+
+
+# apply(arq, "teste-bnf.txt")
+apply_in_file('js-grammar.txt')
