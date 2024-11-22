@@ -21,6 +21,47 @@ def detectar_paren(txt):
         lp.append(conteudo)
     return lp
 
+# \/ obter lista de substrings que compõem caracteres de blocos;
+def pegar_grupos(txt):
+    bloco = ('(', ')')
+    listg = []
+    # \/ bloco final;
+    fech = txt.rfind(bloco[1])
+    while fech != -1:
+        # \/ do final, volta ao bloco abertura;
+        abre = txt[0:fech].rfind(bloco[0])
+        if abre != -1:
+            meio = txt[abre:-1]
+            # \/ da abertura, vai ao próximo bloco final;
+            fech2 = meio.find(bloco[1])
+            grupo = meio[0:fech2+1]
+            listg.append( grupo )
+
+            txt = txt[0:abre]
+            fech = txt.rfind(bloco[1])
+    return listg
+
+# \/ obter lista de substrings que compõem blocos de strings("...", "...");
+def pegar_grupos_string(txt):
+    tipos_string = ('"', '\'')
+    token_string = tipos_string[0]
+    listg = []
+    # \/ bloco final;
+    fech = txt.rfind(token_string)
+    while fech != -1:
+        # \/ do final, volta ao bloco abertura;
+        abre = txt[0:fech].rfind(token_string)
+        if abre != -1:
+            meio = txt[abre:-1]
+            # \/ da abertura, vai ao próximo bloco final;
+            fech2 = meio.find(token_string, 1)
+            grupo = meio[0:fech2+1]
+            listg.append( grupo )
+
+            txt = txt[0:abre]
+            fech = txt.rfind(token_string)
+    return listg
+
 # \/ inserir espaço em branco entre aspas e remover espaços duplicados;
 def inserir_espaco_aspas(txt):
     txt = txt.replace("'", " ' ").replace('"', ' " ')
@@ -49,7 +90,11 @@ def detectar_divisor_production(line):
         lugar = x.span()
         return line[lugar[0]:lugar[1]]
 
+def remove_duplicates(lista):
+    return list(dict.fromkeys(lista))
+
 def detectar_grupos_criar_non_terms(linhas_arq):
+    divisor_production = ''
     nonterm_ant = ''
     novas_linhas = []
     for con, l in enumerate(arq):
@@ -58,21 +103,24 @@ def detectar_grupos_criar_non_terms(linhas_arq):
         nonterm = get_nonTerm(linha)
 
         if nonterm != None:
+            divisor_production = detectar_divisor_production(linha)
             nonterm_ant = nonterm
             paren = detectar_paren(linha)
-            for idx, p in enumerate(paren):
+            paren = remove_duplicates(paren)
+            for idx, grupo in enumerate(paren):
                 nonTerm_aux = nonterm + '_AUX_' + str(con) + '_' + str(idx)
-                linha = linha.replace(p, nonTerm_aux)
-
-                new_non_term = nonTerm_aux + ' ::= ' + p
+                linha = linha.replace(grupo, nonTerm_aux)
+                print(grupo)
+                new_non_term = nonTerm_aux + ' ::= ' + grupo
                 novas_linhas.append(new_non_term)
         elif linha[0] == '|':
             paren = detectar_paren(linha)
-            for idx, p in enumerate(paren):
+            paren = remove_duplicates(paren)
+            for idx, grupo in enumerate(paren):
                 nonTerm_aux = nonterm_ant + '_AUX_' + str(con) + '_' + str(idx)
-                linha = linha.replace(p, nonTerm_aux)
+                linha = linha.replace(grupo, nonTerm_aux)
 
-                new_non_term = nonTerm_aux + ' ::= ' + p
+                new_non_term = nonTerm_aux + ' ' + divisor_production + ' ' + grupo
                 novas_linhas.append(new_non_term)
         # print(linha)
         arq[con] = linha
