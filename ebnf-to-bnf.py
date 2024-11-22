@@ -67,13 +67,13 @@ def eliminar_grupos_bordas_strings(txt, tup_blocos):
                 grupos_blocos.pop(idx)
     return grupos_blocos
 
-def retirar_ultimos_blocos(line):
-    bloco = ('(', ')')
+def retirar_ultimos_blocos(line, tup_blocos):
+    bloco = tup_blocos
     new_line = None
 
-    reg = r"(| \{bloco[0]})"
+    reg = r"\|[ \t]+\{bloco[0]}"
     x = re.search(reg, line)
-    if x != None and line[-1] == bloco[1]: new_line = '|' + line[3:-1]
+    if x != None and line[-1] == bloco[1]: new_line = '|' + line[x.start()+1:-1]
 
     reg = r"(::=|:|=)"
     x = re.search(reg, line)
@@ -135,6 +135,7 @@ def detectar_grupos_criar_non_terms(linhas_arq):
             novas_linhas += tup_linha_novas_linhas[1]
             linha = tup_linha_novas_linhas[0]
 
+        novas_linhas = remove_duplicates(novas_linhas)
         arq[con] = linha
     return novas_linhas
 
@@ -146,8 +147,15 @@ def criar_arq_bnf(linhas_arq, nome_arq_bnf):
 
 def add_novas_linhas(linhas_arq):
     novas_linhas = detectar_grupos_criar_non_terms(linhas_arq)
+    tup_bloco1 = ('(', ')')
+    tup_bloco2 = ('[', ']')
     for l in novas_linhas:
-        l = retirar_ultimos_blocos(l)
+        linhas_sem_ulti_blocos1 = retirar_ultimos_blocos(l, tup_bloco1)
+        if linhas_sem_ulti_blocos1 != None: l = linhas_sem_ulti_blocos1
+
+        linhas_sem_ulti_blocos2 = retirar_ultimos_blocos(l, tup_bloco2)
+        if linhas_sem_ulti_blocos2 != None: l = linhas_sem_ulti_blocos2
+
         linhas_arq.append(l)
     return linhas_arq
 
