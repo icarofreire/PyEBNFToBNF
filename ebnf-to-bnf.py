@@ -93,7 +93,7 @@ def detectar_divisor_production(line):
 def remove_duplicates(lista):
     return list(dict.fromkeys(lista))
 
-def criar_auxiliares_por_grupos_obtidos(linha, con, nonterm, tup_blocos):
+def criar_auxiliares_por_grupos_obtidos(linha, con, nonterm, tup_blocos, divisor_production):
     novas_linhas = []
     paren = eliminar_grupos_bordas_strings(linha, tup_blocos)
     paren = remove_duplicates(paren)
@@ -102,9 +102,10 @@ def criar_auxiliares_por_grupos_obtidos(linha, con, nonterm, tup_blocos):
             nonTerm_aux = nonterm + '_AUX_' + str(con) + '_' + str(idx)
             linha = linha.replace(grupo, nonTerm_aux)
 
-            new_non_term = nonTerm_aux + ' ::= ' + grupo
+            div = divisor_production if divisor_production != None else '::='
+            new_non_term = nonTerm_aux + ' ' + div + ' ' + grupo
             novas_linhas.append(new_non_term)
-    return novas_linhas
+    return (linha, novas_linhas)
 
 def detectar_grupos_criar_non_terms(linhas_arq):
     divisor_production = ''
@@ -123,12 +124,16 @@ def detectar_grupos_criar_non_terms(linhas_arq):
             divisor_production = detectar_divisor_production(linha)
             nonterm_ant = nonterm
 
-            novas_linhas += criar_auxiliares_por_grupos_obtidos(linha, con, nonterm, tup_blocos1)
-            novas_linhas += criar_auxiliares_por_grupos_obtidos(linha, con, nonterm, tup_blocos2)
-        elif linha[0] == '|' and nonterm != None:
+            tup_linha_novas_linhas = criar_auxiliares_por_grupos_obtidos(linha, con, nonterm, tup_blocos1, divisor_production)
+            novas_linhas += tup_linha_novas_linhas[1]
+            novas_linhas += tup_linha_novas_linhas[1]
+            linha = tup_linha_novas_linhas[0]
+        elif linha[0] == '|':
 
-            novas_linhas += criar_auxiliares_por_grupos_obtidos(linha, con, nonterm, tup_blocos1)
-            novas_linhas += criar_auxiliares_por_grupos_obtidos(linha, con, nonterm, tup_blocos2)
+            tup_linha_novas_linhas = criar_auxiliares_por_grupos_obtidos(linha, con, nonterm_ant, tup_blocos1, divisor_production)
+            novas_linhas += tup_linha_novas_linhas[1]
+            novas_linhas += tup_linha_novas_linhas[1]
+            linha = tup_linha_novas_linhas[0]
 
         arq[con] = linha
     return novas_linhas
