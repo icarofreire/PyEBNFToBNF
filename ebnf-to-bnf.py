@@ -62,11 +62,29 @@ def pegar_grupos_string(txt):
             fech = txt.rfind(token_string)
     return listg
 
+""" \/ se o indice do inicio algum bloco encontrado,
+estiver no mesmo local que um bloco de string encontrado (ex: "(");
+elimina grupos obtidos com bordas que pertencam a grupos strings;
+"""
+def eliminar_grupos_bordas_strings(txt):
+    grupos_blocos = pegar_grupos(txt)
+    grupos_str = pegar_grupos_string(txt)
+    for i in grupos_str:
+        ind = txt.find(i)+1
+        for idx, bloco in enumerate(grupos_blocos):
+            indb = txt.find(bloco)
+            if ind == indb:
+                grupos_blocos.pop(idx)
+    return grupos_blocos
+
 # \/ inserir espaço em branco entre aspas e remover espaços duplicados;
 def inserir_espaco_aspas(txt):
     txt = txt.replace("'", " ' ").replace('"', ' " ')
     txt = re.sub('[ \t]+', ' ', txt)
     return txt
+
+def remover_espacos_multi(txt):
+    return re.sub('[ \t]+', ' ', txt)
 
 def retirar_aspas_ultimas(line):
     new_line = None
