@@ -86,16 +86,17 @@ def inserir_espaco_aspas(txt):
 def remover_espacos_multi(txt):
     return re.sub('[ \t]+', ' ', txt)
 
-def retirar_aspas_ultimas(line):
+def retirar_ultimos_blocos(line):
+    bloco = ('(', ')')
     new_line = None
 
-    reg = r"(| \()"
+    reg = r"(| \{bloco[0]})"
     x = re.search(reg, line)
-    if x != None and line[-1] == ')': new_line = '|' + line[3:-1]
+    if x != None and line[-1] == bloco[1]: new_line = '|' + line[3:-1]
 
     reg = r"(::=|:|=)"
     x = re.search(reg, line)
-    if x != None and line[-1] == ')':
+    if x != None and line[-1] == bloco[1]:
         lugar = x.span()
         new_line = line[0:lugar[1]] + line[lugar[1]+2:-1]
 
@@ -117,22 +118,23 @@ def detectar_grupos_criar_non_terms(linhas_arq):
     novas_linhas = []
     for con, l in enumerate(arq):
         linha = l.strip()
-        linha = inserir_espaco_aspas(linha)
+        # \/ eliminar caracteres opcionais, ou de repetição;
+        linha  = re.sub('[\?\+\*]+', ' ', linha)
         nonterm = get_nonTerm(linha)
 
         if nonterm != None:
             divisor_production = detectar_divisor_production(linha)
             nonterm_ant = nonterm
-            paren = detectar_paren(linha)
+            paren = eliminar_grupos_bordas_strings(linha)
             paren = remove_duplicates(paren)
             for idx, grupo in enumerate(paren):
                 nonTerm_aux = nonterm + '_AUX_' + str(con) + '_' + str(idx)
                 linha = linha.replace(grupo, nonTerm_aux)
-                print(grupo)
+
                 new_non_term = nonTerm_aux + ' ::= ' + grupo
                 novas_linhas.append(new_non_term)
         elif linha[0] == '|':
-            paren = detectar_paren(linha)
+            paren = eliminar_grupos_bordas_strings(linha)
             paren = remove_duplicates(paren)
             for idx, grupo in enumerate(paren):
                 nonTerm_aux = nonterm_ant + '_AUX_' + str(con) + '_' + str(idx)
@@ -153,7 +155,7 @@ def criar_arq_bnf(linhas_arq, nome_arq_bnf):
 def add_novas_linhas(linhas_arq):
     novas_linhas = detectar_grupos_criar_non_terms(linhas_arq)
     for l in novas_linhas:
-        # l = retirar_aspas_ultimas(l)
+        l = retirar_ultimos_blocos(l)
         linhas_arq.append(l)
     return linhas_arq
 
