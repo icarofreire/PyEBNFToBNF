@@ -118,7 +118,7 @@ def detectar_grupos_criar_non_terms(linhas_arq):
     nonterm_ant = ''
     novas_linhas = []
     dic_grupo_nonTerm_aux = {}
-    for con, l in enumerate(arq):
+    for con, l in enumerate(linhas_arq):
         linha = l.strip()
         # \/ eliminar caracteres opcionais, ou de repetição;
         linha  = re.sub('[\?\+\*]+', ' ', linha)
@@ -145,7 +145,7 @@ def detectar_grupos_criar_non_terms(linhas_arq):
             linha = tup_linha_novas_linhas[0]
 
         novas_linhas = remove_duplicates(novas_linhas)
-        arq[con] = linha
+        linhas_arq[con] = linha
     return novas_linhas
 
 
