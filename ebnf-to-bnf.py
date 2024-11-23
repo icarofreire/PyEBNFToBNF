@@ -126,7 +126,7 @@ def criar_auxiliares_por_grupos_obtidos(linha, con, nonterm, tup_blocos, divisor
                 novas_linhas.append(new_non_term)
     return (linha, novas_linhas, dic_grupo_nonTerm_aux)
 
-def detectar_grupos_criar_non_terms(linhas_arq):
+def detectar_grupos_criar_non_terms(linhas_arq, tup_blocos):
     divisor_production = ''
     nonterm_ant = ''
     novas_linhas = []
@@ -137,21 +137,18 @@ def detectar_grupos_criar_non_terms(linhas_arq):
         linha  = re.sub('[\?\+\*]+', ' ', linha)
         nonterm = get_nonTerm(linha)
 
-        tup_blocos1 = ('(', ')')
-        tup_blocos2 = ('[', ']')
-
         if nonterm != None:
             divisor_production = detectar_divisor_production(linha)
             nonterm_ant = nonterm
 
-            tup_linha_novas_linhas = criar_auxiliares_por_grupos_obtidos(linha, con, nonterm, tup_blocos1, divisor_production, dic_grupo_nonTerm_aux)
+            tup_linha_novas_linhas = criar_auxiliares_por_grupos_obtidos(linha, con, nonterm, tup_blocos, divisor_production, dic_grupo_nonTerm_aux)
             novas_linhas += tup_linha_novas_linhas[1]
             novas_linhas += tup_linha_novas_linhas[1]
             dic_grupo_nonTerm_aux.update(tup_linha_novas_linhas[2])
             linha = tup_linha_novas_linhas[0]
         elif linha[0] == '|':
 
-            tup_linha_novas_linhas = criar_auxiliares_por_grupos_obtidos(linha, con, nonterm_ant, tup_blocos1, divisor_production, dic_grupo_nonTerm_aux)
+            tup_linha_novas_linhas = criar_auxiliares_por_grupos_obtidos(linha, con, nonterm_ant, tup_blocos, divisor_production, dic_grupo_nonTerm_aux)
             novas_linhas += tup_linha_novas_linhas[1]
             novas_linhas += tup_linha_novas_linhas[1]
             dic_grupo_nonTerm_aux.update(tup_linha_novas_linhas[2])
@@ -159,6 +156,13 @@ def detectar_grupos_criar_non_terms(linhas_arq):
 
         novas_linhas = remove_duplicates(novas_linhas)
         linhas_arq[con] = linha
+    return novas_linhas
+
+def detectar_grupos_por_tipo_blocos(linhas_arq):
+    tup_blocos1 = ('(', ')')
+    tup_blocos2 = ('[', ']')
+    novas_linhas = detectar_grupos_criar_non_terms(linhas_arq, tup_blocos1)
+    novas_linhas += detectar_grupos_criar_non_terms(linhas_arq, tup_blocos2)
     return novas_linhas
 
 
@@ -171,7 +175,7 @@ def add_novas_linhas(linhas_arq):
     tup_bloco1 = ('(', ')')
     tup_bloco2 = ('[', ']')
 
-    novas_linhas = detectar_grupos_criar_non_terms(linhas_arq)
+    novas_linhas = detectar_grupos_por_tipo_blocos(linhas_arq)
 
     # \/ retirar os ultimos blocos das linhas que foram substituídas
     # dentro da função detectar_grupos_criar_non_terms acima; /\
