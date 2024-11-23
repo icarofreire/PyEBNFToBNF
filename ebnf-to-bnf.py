@@ -74,15 +74,24 @@ def retirar_ultimos_blocos(line, tup_blocos):
     bloco = tup_blocos
     new_line = None
 
-    reg = r"\|[ \t]+\{bloco[0]}"
-    x = re.search(reg, line)
-    if x != None and line[-1] == bloco[1]: new_line = '|' + line[x.start()+1:-1]
+    if bloco[0] == '(':
+        reg1 = '\|[ \t]*\('
+        reg2 = '(::=|:|=)[ \t]*\('
+    if bloco[0] == '[':
+        reg1 = '\|[ \t]*\['
+        reg2 = '(::=|:|=)[ \t]*\['
 
-    reg = r"(::=|:|=)"
+    reg = reg1
     x = re.search(reg, line)
     if x != None and line[-1] == bloco[1]:
         lugar = x.span()
-        new_line = line[0:lugar[1]] + line[lugar[1]+2:-1]
+        new_line = line[0:lugar[1]-1] + line[lugar[1]+1:-1]
+
+    reg = reg2
+    x = re.search(reg, line)
+    if x != None and line[-1] == bloco[1]:
+        lugar = x.span()
+        new_line = line[0:lugar[1]-1] + line[lugar[1]+1:-1]
 
     return new_line
 
