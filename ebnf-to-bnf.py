@@ -168,9 +168,20 @@ def criar_arq_bnf(linhas_arq, nome_arq_bnf):
     file.close()
 
 def add_novas_linhas(linhas_arq):
-    novas_linhas = detectar_grupos_criar_non_terms(linhas_arq)
     tup_bloco1 = ('(', ')')
     tup_bloco2 = ('[', ']')
+
+    novas_linhas = detectar_grupos_criar_non_terms(linhas_arq)
+
+    # \/ retirar os ultimos blocos das linhas que foram substituídas
+    # dentro da função detectar_grupos_criar_non_terms acima; /\
+    for idx, lin_arq in enumerate(linhas_arq):
+        noval = retirar_ultimos_blocos(lin_arq, tup_bloco1)
+        if noval != None: linhas_arq[idx] = noval
+
+        noval = retirar_ultimos_blocos(lin_arq, tup_bloco2)
+        if noval != None: linhas_arq[idx] = noval
+
     for l in novas_linhas:
         linhas_sem_ulti_blocos1 = retirar_ultimos_blocos(l, tup_bloco1)
         if linhas_sem_ulti_blocos1 != None: l = linhas_sem_ulti_blocos1
