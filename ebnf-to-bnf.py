@@ -1,6 +1,9 @@
 """
 *** converter gramática EBNF para BNF; ***
 """
+
+import os
+import sys
 import re
 
 # \/ detectar não-terminal;
@@ -189,6 +192,32 @@ def apply_in_file(arquivo):
     # Close opened file
     f.close()
 
+def apply_in_folder(pasta):
+    if os.path.exists(pasta):
+        dir_list = os.listdir(pasta)
+        for file in dir_list:
+            if file.find('.txt') != -1:
+                path = os.path.join(pasta, file)
+                apply_in_file(path)
+    else: print('Este diretório não existe;')
 
+def get_args():
+    pasta = None
+    arquivo = None
+
+    cmd1 = '-fold='
+    cmd2 = '-file='
+    for arg in sys.argv:
+        if arg.find(cmd1) != -1: pasta = arg[len(cmd1):]
+        if arg.find(cmd2) != -1: arquivo = arg[len(cmd2):]
+    return {'pasta': pasta, 'arquivo': arquivo}
+
+def apply_from_args():
+    dic_args = get_args()
+    if 'arquivo' in dic_args and dic_args['arquivo'] != None: apply_in_file(dic_args['arquivo'])
+    if 'pasta' in dic_args and dic_args['pasta'] != None: apply_in_folder(dic_args['pasta'])
+
+
+apply_from_args()
 # apply(arq, "teste-bnf.txt")
-apply_in_file('js-grammar.txt')
+# apply_in_file('js-grammar.txt')
