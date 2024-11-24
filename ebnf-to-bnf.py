@@ -34,6 +34,36 @@ def pegar_grupos(txt, tup_blocos):
             fech = txt.rfind(bloco[1])
     return listg
 
+def find_nth(haystack: str, needle: str, n: int) -> int:
+    start = haystack.find(needle)
+    while start >= 0 and n > 1:
+        start = haystack.find(needle, start+1)
+        n -= 1
+    return start
+
+def rfind_nth(haystack: str, needle: str, n: int) -> int:
+    start = haystack.rfind(needle)
+    while start >= 0 and n > 1:
+        start = haystack.rfind(needle, 0, start-1)
+        n -= 1
+    return start
+
+def pegar_grupos_profund(txt, tup_blocos, niveis):
+    bloco = tup_blocos
+    listg = []
+    # \/ bloco final;
+    fech = find_nth(txt, bloco[1], niveis)
+    while fech != -1:
+        # \/ do final, volta ao bloco abertura;
+        abre = rfind_nth(txt[0:fech+1], bloco[0], niveis)
+        if abre != -1:
+            meio = txt[abre:fech+1]
+            listg.append( meio )
+
+            txt = txt[0:abre]
+            fech = find_nth(txt, bloco[1], niveis)
+    return listg
+
 # \/ obter lista de substrings que compõem blocos de strings("...", "...");
 def pegar_grupos_string(txt):
     tipos_string = ('"', '\'')
